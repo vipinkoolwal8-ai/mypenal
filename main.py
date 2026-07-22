@@ -1,0 +1,361 @@
+from flask import Flask, render_template_string, request, jsonify
+import requests
+import re
+
+app = Flask(__name__)
+
+# ---------------- DASHBOARD (MODERN TECH THEME) ----------------
+HTML_DASHBOARD = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Waleed All Server Panel</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background: #0b0b1a;
+  background-image: radial-gradient(circle at 20% 30%, #1a1a3e, #05050f);
+  display:flex; flex-direction:column; align-items:center; min-height:100vh;
+  padding:2rem; font-family:'Rajdhani',sans-serif; color:#fff;
+}
+header{
+  text-align:center; margin-bottom:2.5rem;
+  position:relative;
+}
+header h1{
+  font-family:'Orbitron',sans-serif; font-size:3rem; font-weight:900;
+  background:linear-gradient(135deg,#00f0ff,#7a2bff,#ff00c8);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  text-shadow:0 0 40px rgba(0,240,255,0.3);
+  letter-spacing:4px;
+}
+header .sub{
+  font-size:1.1rem; color:#aab; letter-spacing:3px; margin-top:0.2rem;
+  font-weight:300; text-transform:uppercase;
+  border-bottom:1px solid rgba(0,240,255,0.2); padding-bottom:0.8rem;
+}
+.container{
+  display:flex; flex-wrap:wrap; gap:2rem; justify-content:center; width:100%;
+  max-width:1300px;
+}
+.card{
+  position:relative; width:340px; height:450px; border-radius:24px;
+  overflow:hidden; background:#111122;
+  cursor:pointer;
+  box-shadow:0 8px 32px rgba(0,0,0,0.8), 0 0 0 1px rgba(0,240,255,0.15);
+  transition:transform 0.4s cubic-bezier(0.2,0.9,0.4,1), box-shadow 0.4s ease;
+}
+.card:hover{
+  transform:translateY(-10px) scale(1.02);
+  box-shadow:0 20px 50px rgba(0,0,0,0.9), 0 0 30px rgba(0,240,255,0.2);
+}
+.card video{
+  width:100%; height:100%; object-fit:cover;
+  filter:brightness(0.6) saturate(1.3) contrast(1.1);
+}
+.overlay{
+  position:absolute; bottom:-100%; left:0; width:100%; height:100%;
+  background:linear-gradient(to top, rgba(11,11,26,0.95) 30%, transparent 100%);
+  display:flex; flex-direction:column; justify-content:flex-end;
+  padding:30px 25px; opacity:0; transition:all 0.5s ease-in-out; z-index:2;
+}
+.card.active .overlay{
+  bottom:0; opacity:1;
+}
+.overlay h3{
+  font-family:'Orbitron',sans-serif; font-size:26px; font-weight:700;
+  margin-bottom:6px; color:#00f0ff; text-shadow:0 0 20px rgba(0,240,255,0.5);
+  letter-spacing:1px; animation:slideUp 0.5s ease forwards;
+}
+.overlay p{
+  font-size:15px; color:#ccd; margin-bottom:18px; line-height:1.5;
+  opacity:0; animation:fadeIn 0.6s ease forwards; animation-delay:0.2s;
+  font-weight:300;
+}
+.open-btn{
+  align-self:center; background:linear-gradient(135deg,#00f0ff,#7a2bff);
+  border:none; padding:12px 32px; border-radius:40px; font-size:16px;
+  color:#fff; cursor:pointer; font-weight:600;
+  box-shadow:0 4px 20px rgba(0,240,255,0.4);
+  transition:all 0.3s ease; opacity:0;
+  animation:fadeIn 0.6s ease forwards; animation-delay:0.4s;
+  text-transform:uppercase; letter-spacing:1px;
+}
+.open-btn:hover{
+  transform:scale(1.08); box-shadow:0 0 40px rgba(0,240,255,0.7);
+  background:linear-gradient(135deg,#66f0ff,#9a5aff);
+}
+@keyframes slideUp{
+  from{transform:translateY(30px); opacity:0;}
+  to{transform:translateY(0); opacity:1;}
+}
+@keyframes fadeIn{
+  from{opacity:0;} to{opacity:1;}
+}
+footer{
+  margin-top:3rem; font-size:1rem; color:#667;
+  text-align:center; border-top:1px solid #1a1a3e; padding-top:1.5rem;
+  width:100%; max-width:800px;
+  letter-spacing:1px;
+}
+footer span{color:#00f0ff; font-weight:600;}
+</style>
+</head>
+<body>
+<header>
+  <h1>⚡ WALEED</h1>
+  <div class="sub">All Server Panel • Next‑Gen Tools</div>
+</header>
+<div class="container">
+
+  <!-- Card 1: Convo 3.0 -->
+  <div class="card" onclick="toggleOverlay(this)">
+    <video autoplay muted loop playsinline>
+      <source src="https://raw.githubusercontent.com/serverxdt/Approval/main/223.mp4" type="video/mp4">
+    </video>
+    <div class="overlay">
+      <h3>Convo 3.0</h3>
+      <p>Non Stop Convo By NaSiir Alii | Multy + Single Bot</p>
+      <button class="open-btn" onclick="event.stopPropagation(); window.open('https://server2-1d1h.onrender.com/','_blank')">OPEN</button>
+    </div>
+  </div>
+
+  <!-- Card 2: Post 3.0 -->
+  <div class="card" onclick="toggleOverlay(this)">
+    <video autoplay muted loop playsinline>
+      <source src="https://raw.githubusercontent.com/serverxdt/Approval/main/Anime.mp4" type="video/mp4">
+    </video>
+    <div class="overlay">
+      <h3>Post 3.0</h3>
+      <p>Multy Cookie + Multy Token | Thread Stop/Resume/Pause</p>
+      <button class="open-btn" onclick="event.stopPropagation(); window.open('https://post-2zzl.onrender.com/','_blank')">OPEN</button>
+    </div>
+  </div>
+
+  <!-- Card 3: Token Checker 3.0 -->
+  <div class="card" onclick="toggleOverlay(this)">
+    <video autoplay muted loop playsinline>
+      <source src="https://raw.githubusercontent.com/serverxdt/Approval/main/GOKU%20_%20DRAGON%20BALZZ%20_%20anime%20dragonballz%20dragonballsuper%20goku%20animeedit%20animetiktok.mp4" type="video/mp4">
+    </video>
+    <div class="overlay">
+      <h3>Token Checker 3.0</h3>
+      <p>Token Checker + GC UID Extractor Bot</p>
+      <button class="open-btn" onclick="event.stopPropagation(); window.open('/token','_blank')">OPEN</button>
+    </div>
+  </div>
+
+  <!-- Card 4: Post UID 2.0 -->
+  <div class="card" onclick="toggleOverlay(this)">
+    <video autoplay muted loop playsinline>
+      <source src="https://raw.githubusercontent.com/serverxdt/Approval/main/SOLO%20LEVELING.mp4" type="video/mp4">
+    </video>
+    <div class="overlay">
+      <h3>Post UID 2.0</h3>
+      <p>Enter Your Post Link & Extract Post UID Easily</p>
+      <button class="open-btn" onclick="event.stopPropagation(); window.open('/post_uid','_blank')">OPEN</button>
+    </div>
+  </div>
+
+</div>
+<footer>Created by <span>Waleed</span> • All Servers Integrated</footer>
+<script>
+function toggleOverlay(card){card.classList.toggle('active');}
+</script>
+</body>
+</html>
+"""
+
+# ---------------- TOKEN CHECKER PAGE (unchanged) ----------------
+TOKEN_HTML = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>2025 GC UID Finder</title>
+<style>
+body{font-family:'Orbitron',sans-serif;background:radial-gradient(circle at top,#ff00ff,#6600ff,#000);color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;}
+.glass-container{background:rgba(255,255,255,0.08);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.2);border-radius:20px;padding:25px;width:90%;max-width:420px;text-align:center;}
+h1{margin-bottom:10px;font-size:22px;text-shadow:0 0 10px #ff00ff;}
+input{width:95%;padding:12px;border-radius:12px;border:none;outline:none;margin-bottom:15px;font-size:14px;text-align:center;background:rgba(255,255,255,0.1);color:#fff;box-shadow:inset 0 0 10px rgba(255,0,255,0.3);}
+input::placeholder{color:#ddd;}
+.btn{display:block;width:100%;background:linear-gradient(90deg,#ff00ff,#6600ff);color:white;border:none;border-radius:12px;padding:12px;font-size:15px;margin:8px 0;cursor:pointer;box-shadow:0 0 12px #ff00ff;transition:transform 0.2s ease,box-shadow 0.2s ease;}
+.btn:hover{transform:scale(1.05);box-shadow:0 0 20px #ff00ff,0 0 40px #6600ff;}
+.result-box{background:rgba(0,0,0,0.4);border-radius:12px;padding:10px;margin-top:12px;text-align:left;box-shadow:inset 0 0 10px rgba(255,0,255,0.3);}
+.copy-btn{background:#ff00ff;color:white;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;margin-top:5px;transition:0.2s ease;}
+.copy-btn:hover{background:#ffffff;color:#6600ff;}
+.spinner{margin:15px auto;border:4px solid rgba(255,255,255,0.2);border-top:4px solid #ff00ff;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;}
+@keyframes spin{100%{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="glass-container">
+<h1>⚡ 2025 GC UID Finder</h1>
+<input type="text" id="token" placeholder="Paste Your Facebook Token"/>
+<button class="btn" onclick="fetchTokenInfo()">🔑 Check Token</button>
+<button class="btn" onclick="fetchGcUids()">💬 Find GC UID</button>
+<div id="loading" class="spinner" style="display:none;"></div>
+<div id="tokenResult" class="result-box"></div>
+<div id="gcResult" class="result-box"></div>
+</div>
+<script>
+function fetchTokenInfo(){
+  const token=document.getElementById("token").value.trim();
+  if(!token)return alert("Please enter a token!");
+  toggleLoading(true);
+  fetch("/token_info",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"token="+encodeURIComponent(token)})
+  .then(res=>res.json())
+  .then(data=>{
+    toggleLoading(false);
+    const result=document.getElementById("tokenResult");
+    result.innerHTML=data.error?`<p style="color:#ff4444;">❌ ${data.error}</p>`:`<p><b>✅ Name:</b> ${data.name}</p><p><b>ID:</b> ${data.id}</p><p><b>DOB:</b> ${data.dob}</p><p><b>Email:</b> ${data.email}</p>`;
+  });
+}
+function fetchGcUids(){
+  const token=document.getElementById("token").value.trim();
+  if(!token)return alert("Please enter a token!");
+  toggleLoading(true);
+  fetch("/gc_uid",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"token="+encodeURIComponent(token)})
+  .then(res=>res.json())
+  .then(data=>{
+    toggleLoading(false);
+    const result=document.getElementById("gcResult");
+    result.innerHTML="<h3>Messenger Group Chats</h3>";
+    if(data.error){result.innerHTML+=`<p style="color:#ff4444;">❌ ${data.error}</p>`;}else{
+      data.gc_data.forEach((gc,i)=>{
+        result.innerHTML+=`<div style="margin-top:10px;border-bottom:1px solid rgba(255,255,255,0.2);padding-bottom:5px;">
+<p><b>GC ${i+1}:</b> ${gc.gc_name}</p>
+<p><b>UID:</b> ${gc.gc_uid}</p>
+<button class='copy-btn' onclick="navigator.clipboard.writeText('${gc.gc_uid}').then(()=>alert('✅ UID copied!'))">📋 Copy UID</button>
+</div>`;
+      });
+    }
+  });
+}
+function toggleLoading(show){
+    document.getElementById("loading").style.display = show ? "block" : "none";
+}
+</script>
+</body>
+</html>
+"""
+
+# ---------------- POST UID FINDER (unchanged) ----------------
+POST_UID_HTML = """
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FB Post UID Extractor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{margin:0;padding:0;font-family:'Segoe UI',sans-serif;background:linear-gradient(to right,#9932CC,#FF00FF);display:flex;justify-content:center;align-items:center;flex-direction:column;min-height:100vh;color:white;}
+.glass-box{width:92%;max-width:350px;margin:50px auto;background:linear-gradient(to right,#9932CC,#FF00FF);padding:25px;border-radius:20px;box-shadow:0 0 10px #8000ff,0 0 20px #ff00cc,inset 0 0 10px #330033;text-align:center;}
+h2{color:white;text-shadow:0 0 10px #1589FF,0 0 10px #00FFFF;}
+input[type=text]{width:92%;padding:12px;margin:15px 0;border:none;border-radius:15px;font-size:16px;background-color:white;color:gray;outline:none;}
+button{padding:12px 25px;border:none;border-radius:8px;background:linear-gradient(to right,#1589FF,#00FFFF);color:white;font-size:16px;cursor:pointer;box-shadow:0 0 10px #1589FF,0 0 10px #00FFFF;transition:background 0.3s,transform 0.2s;}
+button:hover{background-color:#cc0022;transform:scale(1.05);}
+.result{margin-top:20px;font-weight:bold;color:#00ffcc;text-shadow:0 0 5px black;}
+.footer{margin-top:30px;font-size:18px;font-weight:bold;color:#ff69b4;text-shadow:0 0 10px black,0 0 15px #ff69b4;}
+</style>
+</head>
+<body>
+<div class="glass-box">
+<img src="https://i.imgur.com/iJ8mZjV.jpeg" style="width:100%;height:500px;border-radius:30px;">
+<h2>Post Uid Find</h2>
+<form method="POST">
+<input type="text" name="fb_url" placeholder="Enter FB post URL" required>
+<button type="submit">Find UID</button>
+</form>
+{% if uid %}
+<div class="result">Post UID: {{ uid }}</div>
+{% endif %}
+<div class="footer">(NASIIR-ALII) 2.0 - 2025</div>
+</div>
+</body>
+</html>
+"""
+
+# ---------------- UTILITY FUNCTIONS (unchanged) ----------------
+TOKEN_INFO_URL = "https://graph.facebook.com/v17.0/me?fields=id,name,birthday,email"
+GC_UID_URL = "https://graph.facebook.com/v17.0/me/conversations?fields=id,name"
+
+def check_token(token):
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.get(TOKEN_INFO_URL, headers=headers)
+    if response.status_code == 200:
+        data = response.json()
+        return {
+            "status": "Valid",
+            "name": data.get("name", "N/A"),
+            "id": data.get("id", "N/A"),
+            "dob": data.get("birthday", "N/A"),
+            "email": data.get("email", "N/A")
+        }
+    return {"status": "Invalid"}
+
+def get_gc_details(token):
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.get(GC_UID_URL, headers=headers)
+    if response.status_code == 200:
+        gc_data = response.json().get("data", [])
+        gc_list = []
+        for gc in gc_data:
+            raw_id = gc.get("id", "N/A")
+            clean_id = raw_id.replace("t_", "").replace("t", "") if raw_id else "N/A"
+            gc_list.append({"gc_name": gc.get("name", "Unknown"), "gc_uid": clean_id})
+        return gc_list
+    return None
+
+# ---------------- ROUTES (unchanged) ----------------
+@app.route("/token")
+def token_page():
+    return render_template_string(TOKEN_HTML)
+
+@app.route("/token_info", methods=["POST"])
+def token_info():
+    token = request.form.get("token", "").strip()
+    if not token:
+        return jsonify({"error": "Token is required!"})
+    info = check_token(token)
+    if info["status"] == "Invalid":
+        return jsonify({"error": "Invalid or expired token!"})
+    return jsonify(info)
+
+@app.route("/gc_uid", methods=["POST"])
+def gc_uid():
+    token = request.form.get("token", "").strip()
+    if not token:
+        return jsonify({"error": "Token is required!"})
+    data = get_gc_details(token)
+    if data is None:
+        return jsonify({"error": "Failed to fetch GC UIDs!"})
+    return jsonify({"gc_data": data})
+
+@app.route("/post_uid", methods=["GET","POST"])
+def post_uid():
+    uid = None
+    if request.method == "POST":
+        fb_url = request.form.get("fb_url","")
+        try:
+            resp = requests.get(fb_url)
+            text = resp.text
+            patterns = [r"/posts/(\d+)", r"story_fbid=(\d+)", r"facebook.com.*?/photos/\d+/(\d+)"]
+            for pat in patterns:
+                match = re.search(pat, text)
+                if match:
+                    uid = match.group(1)
+                    break
+        except Exception as e:
+            uid = f"Error: {e}"
+    return render_template_string(POST_UID_HTML, uid=uid)
+
+@app.route("/")
+def home():
+    return render_template_string(HTML_DASHBOARD)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
